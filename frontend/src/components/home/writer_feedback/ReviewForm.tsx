@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useCreateReviewMutation } from "../../../redux/apis/review.api";
 
 const ratingLabels = ["", "Poor", "Fair", "Good", "Great", "Excellent"];
@@ -6,33 +6,42 @@ const ratingLabels = ["", "Poor", "Fair", "Good", "Great", "Excellent"];
 const StarRating = ({
   rating,
   setRating,
+  setTouched,
 }: {
   rating: number;
   setRating: (n: number) => void;
+  setTouched: (n: boolean) => void;
 }) => {
   const [hovered, setHovered] = useState(0);
+  const starRefs = useRef<Array<HTMLButtonElement | null>>([]);
 
   const handleKey = (e: React.KeyboardEvent, star: number) => {
+    let nextStar = star;
+
     if (e.key === "ArrowRight" || e.key === "ArrowUp") {
       e.preventDefault();
-      const next = Math.min(5, (rating || 0) + 1);
-      setRating(next);
+      nextStar = Math.min(5, star + 1);
     }
 
     if (e.key === "ArrowLeft" || e.key === "ArrowDown") {
       e.preventDefault();
-      const prev = Math.max(1, (rating || 1) - 1);
-      setRating(prev);
+      nextStar = Math.max(1, star - 1);
     }
 
     if (e.key === "Home") {
       e.preventDefault();
-      setRating(1);
+      nextStar = 1;
     }
 
     if (e.key === "End") {
       e.preventDefault();
-      setRating(5);
+      nextStar = 5;
+    }
+
+    if (nextStar !== star) {
+      setTouched(true);
+      setRating(nextStar);
+      starRefs.current[nextStar - 1]?.focus();
     }
   };
 
@@ -46,12 +55,18 @@ const StarRating = ({
         {[1, 2, 3, 4, 5].map((star) => (
           <button
             key={star}
+            ref={(element) => {
+              starRefs.current[star - 1] = element;
+            }}
             type="button"
             role="radio"
             aria-checked={rating === star}
             aria-label={`Rate ${star} star`}
-            tabIndex={0}
-            onClick={() => setRating(star)}
+            tabIndex={rating === star || (!rating && star === 1) ? 0 : -1}
+            onClick={() => {
+              setTouched(true);
+              setRating(star);
+            }}
             onKeyDown={(e) => handleKey(e, star)}
             onMouseEnter={() => setHovered(star)}
             onMouseLeave={() => setHovered(0)}
@@ -86,7 +101,7 @@ const ReviewForm = () => {
 
   const [createReview, { isLoading }] = useCreateReviewMutation();
 
-  const validate = () => {
+  const validate = useCallback(() => {
     const newErrors: Record<string, string> = {};
 
     if (!name.trim()) newErrors.name = "Name is required";
@@ -96,15 +111,10 @@ const ReviewForm = () => {
     if (rating === 0) newErrors.rating = "Please select a rating";
 
     return newErrors;
-  };
+  }, [name, role, feedback, rating]);
 
   // Derived state: is the form valid for enabling submit
-  const isFormValid = useMemo(() => Object.keys(validate()).length === 0, [
-    name,
-    role,
-    feedback,
-    rating,
-  ]);
+  const isFormValid = useMemo(() => Object.keys(validate()).length === 0, [validate]);
 
   // Live validation for touched fields
   useEffect(() => {
@@ -114,8 +124,7 @@ const ReviewForm = () => {
       if (touched[k]) visibleErrors[k] = v[k];
     });
     setErrors(visibleErrors);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [name, role, feedback, rating, touched]);
+  }, [validate, touched]);
 
   const handleSubmit = async () => {
     // mark all as touched so errors show if present
@@ -152,6 +161,7 @@ const ReviewForm = () => {
 
   // helper to update rating and clear rating errors if present
   const handleSetRating = (n: number) => {
+    setTouched((prev) => ({ ...prev, rating: true }));
     setRating(n);
     if (errors.rating) {
       setErrors((prev) => {
@@ -323,7 +333,11 @@ const ReviewForm = () => {
                 <span className="text-red-400">*</span>
               </label>
 
-              <StarRating rating={rating} setRating={handleSetRating} />
+              <StarRating
+                rating={rating}
+                setRating={handleSetRating}
+                setTouched={(value) => setTouched((prev) => ({ ...prev, rating: value }))}
+              />
 
               <p className="mt-2 text-xs text-gray-500">
                 Select a rating based on your overall experience.
