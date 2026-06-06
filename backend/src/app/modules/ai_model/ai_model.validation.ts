@@ -14,7 +14,12 @@ const aiModel = z.object({
     prompt: z
       .string({ required_error: "Prompt is required!" })
       .trim()
-      .min(1, "Prompt cannot be empty or whitespace only!"),
+      .min(1, "Prompt cannot be empty or whitespace only!")
+      .refine((val) => {
+        // Remove [Genre: ...] if it exists to check the actual prompt content
+        const stripped = val.replace(/^\[Genre:.*?\]\s*/, '').trim();
+        return stripped.length > 0;
+      }, { message: "Prompt must contain actual story content, not just a genre." }),
     language: z.string().optional(),
     tone: z
       .enum(VALID_TONES, {
@@ -22,6 +27,15 @@ const aiModel = z.object({
           message: `Tone must be one of: ${VALID_TONES.join(", ")}`,
         }),
       })
+      .optional(),
+    characters: z
+      .array(
+        z.object({
+          name: z.string({ required_error: "Name is required" }).trim().min(1),
+          role: z.string({ required_error: "Role is required" }).trim().min(1),
+          personality: z.string({ required_error: "Personality/Traits are required" }).trim().min(1),
+        })
+      )
       .optional(),
   }),
 });
@@ -38,10 +52,16 @@ const aiStoryContinuation = z.object({
 
 const aiAlternateEndings = z.object({
   body: z.object({
-    title: z.string({ required_error: "Title is required!" }),
-    content: z.string({ required_error: "Content is required!" }),
-    tag: z.string({ required_error: "Tag is required!" }),
-    language: z.string().optional(),
+    title: z
+      .string({ required_error: "Title is required!" })
+      .max(200, "Title must not exceed 200 characters"),
+    content: z
+      .string({ required_error: "Content is required!" })
+      .max(10000, "Content must not exceed 10000 characters"),
+    tag: z
+      .string({ required_error: "Tag is required!" })
+      .max(50, "Tag must not exceed 50 characters"),
+    language: z.string().max(50).optional(),
   }),
 });
 
