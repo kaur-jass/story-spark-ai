@@ -362,8 +362,6 @@ const SignUpComponent = () => {
                     {PASSWORD_REQUIREMENTS.map(({ key, label }) => {
                       const met = passwordChecks[key];
                       return (
-                        <li key={key} className={`flex items-center gap-2 ${met ? "text-emerald-400" : "text-slate-500"}`}>
-                          <i className={`fa-solid ${met ? "fa-circle-check" : "fa-circle-xmark"} text-xs shrink-0`} aria-hidden="true" />
                           <span>{label}</span>
                         </li>
                       );
