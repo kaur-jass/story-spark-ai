@@ -2196,6 +2196,17 @@ const handleGenerateCharacterProfile = async () => {
             title={selectedStory.title}
             narrationState={narrationState}
             narrationWordIndex={narrationWordIndex}
+            onNavigate={(wordIndex) => {
+              console.log("Navigate to story word:", wordIndex);
+
+              // You can add scrolling logic here
+              if (storyContentRef.current) {
+                storyContentRef.current.scrollIntoView({
+                  behavior: "smooth",
+                  block: "center",
+                });
+              }
+            }}
           />
 
           <div className="mb-5">
