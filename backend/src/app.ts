@@ -13,6 +13,7 @@ import { Routers } from "./router";
 import globalErrorHandler from "./app/middleware/global.error.handler";
 import leaderboardRoute from "./routes/leaderboard.route";
 import globalRateLimiter from "./app/middleware/global.rate-limiter";
+import ApiError from "./errors/api_error";
 
 const app: Application = express();
 app.set("trust proxy", 1);
@@ -36,7 +37,9 @@ app.use(
     origin: (origin, callback) => {
       if (!origin) {
         if (process.env.NODE_ENV === "production") {
-          return callback(new Error("Origin header required"));
+          return callback(
+  new ApiError(httpStatus.FORBIDDEN, "Origin header required")
+);
         }
         return callback(null, true);
       }
@@ -44,7 +47,13 @@ app.use(
       if (corsOrigins.includes(origin)) {
         callback(null, true);
       } else {
-        callback(new Error("Blocked by Cross-Origin Resource Sharing (CORS) Policy"));
+        const corsError: any = new Error(
+  "Blocked by Cross-Origin Resource Sharing (CORS) Policy"
+);
+
+corsError.statusCode = httpStatus.FORBIDDEN;
+
+callback(corsError);
       }
     },
     credentials: true,
