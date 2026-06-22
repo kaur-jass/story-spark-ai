@@ -55,23 +55,30 @@ const buildUserInfo = (decodedData: RawJwtPayload): AuthUserInfo => ({
   avatar: decodedData?.avatar || "",
 });
 
-const getValidDecodedToken = () => {
+export const getValidDecodedToken = () => {
   const authToken = getFromLocalStorage(AUTH_KEY);
 
   if (authToken) {
     try {
       const decodedData = decodedToken(authToken);
-          if (
-      typeof decodedData.exp === "number" &&
-      decodedData.exp <= Math.floor(Date.now() / 1000)
-    ) {
-      removeFromLocalStorage(AUTH_KEY);
-      return null;
-    }
+
+      if (!decodedData) {
+        removeFromLocalStorage(AUTH_KEY);
+        return null;
+      }
+
+      if (
+        typeof decodedData.exp === "number" &&
+        decodedData.exp <= Math.floor(Date.now() / 1000)
+      ) {
+        removeFromLocalStorage(AUTH_KEY);
+        return null;
+      }
+
       return buildUserInfo({
         email: decodedData.email ?? "",
         role: decodedData.role ?? "",
-        userId: decodedData.userId ?? "",
+        userId: decodedData.userId ?? decodedData._id ?? "",
         name: decodedData.name ?? "",
         postsCount: decodedData.postsCount ?? 0,
         subscriptionType: decodedData.subscriptionType ?? "free",
