@@ -15,9 +15,6 @@ export const StoryGenerator: React.FC<StoryGeneratorProps> = ({ onStoryGenerated
   const [isLoading, setIsLoading] = useState(false);
   const [stories, setStories] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const MAX_CHARS = 500;
-
 
   const abortContollerRef = useRef<AbortController | null>(null);
   const handleGenerate = async () => {
@@ -119,14 +116,10 @@ export const StoryGenerator: React.FC<StoryGeneratorProps> = ({ onStoryGenerated
         <label htmlFor="prompt" className="block text-sm font-medium text-gray-700 mb-1">
           Story Prompt
         </label>
-<textarea
+        <textarea
           id="prompt"
           value={prompt}
-          onChange={(e) => {
-            if (e.target.value.length <= MAX_CHARS) {
-              setPrompt(e.target.value);
-            }
-          }}
+          onChange={(e) => setPrompt(e.target.value)}
           placeholder="Enter your story prompt..."
           disabled={isLoading}
           rows={4}
