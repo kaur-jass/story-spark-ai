@@ -22,8 +22,6 @@ const LoginComponent = () => {
   const [loginUser] = useLoginUserMutation();
   const [googleLogin] = useGoogleLoginMutation();
 
-  const navigate = useNavigate();
-
   const {
     register,
     handleSubmit,
@@ -32,6 +30,7 @@ const LoginComponent = () => {
 
   const { login } = useContext(AuthContext) ?? { login: () => {} };
   const [isBusy, setIsBusy] = useState(false);
+  const navigate = useNavigate();
   const location = useLocation();
 
   const onSubmit: SubmitHandler<Inputs> = async (data) => {
