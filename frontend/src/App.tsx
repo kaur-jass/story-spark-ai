@@ -140,6 +140,7 @@ const router = createBrowserRouter([
       { path: "community", element: <CommunityComponent /> },
       { path: "report-bug", element: <ReportBug /> },
       { path: "chat", element: <ChatPage /> },
+      { path: "search", element: lazyPage(<SearchPageComponent />) },
       {
         element: <ProtectedRoute allowedRoles={ALL_ROLES} />,
         children: [
@@ -213,6 +214,7 @@ const router = createBrowserRouter([
           { path: "resources", element: <ResourcesListComponent /> },
           { path: "resources/:resourceName", element: <ResourceDetailComponent /> },
           { path: "chat", element: lazyPage(<ChatPage />) },
+          { path: "search", element: lazyPage(<SearchPageComponent />) },
 
           // Protected routes
           {
